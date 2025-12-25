@@ -9,6 +9,7 @@ import { SchoolSubjectsTab } from '@/components/school/SchoolSubjectsTab';
 import { AchievementsTab, ProfileTab } from '@/components/school/SchoolProfileTabs';
 import { CoursesListTab } from '@/components/school/CoursesListTab';
 import { CourseDetailTab } from '@/components/school/CourseDetailTab';
+import { LessonViewTab } from '@/components/school/LessonViewTab';
 import { useStudent } from '@/hooks/useStudent';
 import { useToast } from '@/hooks/use-toast';
 
@@ -269,7 +270,15 @@ const SchoolApp = () => {
           </TabsContent>
 
           <TabsContent value="courses">
-            {selectedCourseId ? (
+            {selectedLessonId ? (
+              <LessonViewTab
+                lessonId={selectedLessonId}
+                studentId={studentId}
+                onBack={() => {
+                  setSelectedLessonId(null);
+                }}
+              />
+            ) : selectedCourseId ? (
               <CourseDetailTab
                 courseId={selectedCourseId}
                 studentId={studentId}
