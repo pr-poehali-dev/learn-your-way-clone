@@ -67,7 +67,7 @@ export const SchoolDashboardTab = ({
           <div className="flex items-center gap-2 mt-2">
             <span className="text-white/90 text-lg font-medium">Ты учишься в</span>
             <span className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white font-bold text-lg border-2 border-white/30">
-              {userGrade}
+              {userGrade.replace(/(\d+)\s*класс$/i, '$1 классе')}
             </span>
           </div>
         </div>
