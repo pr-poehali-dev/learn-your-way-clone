@@ -70,6 +70,7 @@ export const AchievementsTab = ({ achievements }: AchievementsTabProps) => {
 interface ProfileTabProps {
   userName: string;
   userGrade: string;
+  userAge: number;
   userInterests: string[];
   points: number;
   streak: number;
@@ -77,6 +78,16 @@ interface ProfileTabProps {
   subjects: Subject[];
   isEditingInterests: boolean;
   setIsEditingInterests: (value: boolean) => void;
+  isEditingProfile: boolean;
+  editName: string;
+  editGrade: string;
+  editAge: number;
+  setEditName: (value: string) => void;
+  setEditGrade: (value: string) => void;
+  setEditAge: (value: number) => void;
+  startEditingProfile: () => void;
+  saveProfileChanges: () => void;
+  cancelEditingProfile: () => void;
   newInterest: string;
   setNewInterest: (value: string) => void;
   addInterest: (interest: string) => void;
@@ -87,6 +98,7 @@ interface ProfileTabProps {
 export const ProfileTab = ({
   userName,
   userGrade,
+  userAge,
   userInterests,
   points,
   streak,
@@ -94,6 +106,16 @@ export const ProfileTab = ({
   subjects,
   isEditingInterests,
   setIsEditingInterests,
+  isEditingProfile,
+  editName,
+  editGrade,
+  editAge,
+  setEditName,
+  setEditGrade,
+  setEditAge,
+  startEditingProfile,
+  saveProfileChanges,
+  cancelEditingProfile,
   newInterest,
   setNewInterest,
   addInterest,
@@ -109,19 +131,81 @@ export const ProfileTab = ({
 
       <Card className="border-4 border-orange-200 shadow-lg">
         <CardHeader>
-          <div className="flex items-center gap-4">
-            <Avatar className="w-24 h-24 border-4 border-orange-300">
-              <AvatarFallback className="bg-gradient-to-br from-orange-400 to-pink-400 text-white text-3xl font-bold">
-                {userName.charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <CardTitle className="text-3xl">{userName}</CardTitle>
-              <CardDescription className="text-lg mt-1">Ученик {userGrade}</CardDescription>
-              <div className="flex gap-2 mt-2">
-                <Badge className="bg-orange-500 text-white text-sm">Активный</Badge>
-                <Badge className="bg-green-500 text-white text-sm">Отличник</Badge>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Avatar className="w-24 h-24 border-4 border-orange-300">
+                <AvatarFallback className="bg-gradient-to-br from-orange-400 to-pink-400 text-white text-3xl font-bold">
+                  {userName.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                {isEditingProfile ? (
+                  <div className="space-y-2">
+                    <Input
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder="Имя"
+                      className="text-xl font-bold"
+                    />
+                    <Input
+                      value={editGrade}
+                      onChange={(e) => setEditGrade(e.target.value)}
+                      placeholder="Класс"
+                      className="text-base"
+                    />
+                    <Input
+                      type="number"
+                      value={editAge}
+                      onChange={(e) => setEditAge(Number(e.target.value))}
+                      placeholder="Возраст"
+                      className="text-base"
+                      min={6}
+                      max={18}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <CardTitle className="text-3xl">{userName}</CardTitle>
+                    <CardDescription className="text-lg mt-1">
+                      Ученик {userGrade} • {userAge} лет
+                    </CardDescription>
+                    <div className="flex gap-2 mt-2">
+                      <Badge className="bg-orange-500 text-white text-sm">Активный</Badge>
+                      <Badge className="bg-green-500 text-white text-sm">Отличник</Badge>
+                    </div>
+                  </>
+                )}
               </div>
+            </div>
+            <div className="flex gap-2">
+              {isEditingProfile ? (
+                <>
+                  <Button
+                    onClick={saveProfileChanges}
+                    className="gap-2"
+                  >
+                    <Icon name="Check" size={16} />
+                    Сохранить
+                  </Button>
+                  <Button
+                    onClick={cancelEditingProfile}
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    <Icon name="X" size={16} />
+                    Отмена
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  onClick={startEditingProfile}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <Icon name="Edit" size={16} />
+                  Редактировать профиль
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>

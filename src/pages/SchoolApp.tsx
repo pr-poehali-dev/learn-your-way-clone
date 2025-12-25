@@ -15,11 +15,16 @@ const SchoolApp = () => {
   const [studentId, setStudentId] = useState<number | null>(1);
   const [userName, setUserName] = useState('Миша');
   const [userGrade, setUserGrade] = useState('7 класс');
+  const [userAge, setUserAge] = useState(13);
   const [userInterests, setUserInterests] = useState(['Футбол', 'Видеоигры', 'Космос']);
   const [points, setPoints] = useState(1250);
   const [streak, setStreak] = useState(7);
   const [isEditingInterests, setIsEditingInterests] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [newInterest, setNewInterest] = useState('');
+  const [editName, setEditName] = useState('');
+  const [editGrade, setEditGrade] = useState('');
+  const [editAge, setEditAge] = useState(0);
   
   const { studentData, loading, updateStudent } = useStudent(studentId);
   const { toast } = useToast();
@@ -86,11 +91,39 @@ const SchoolApp = () => {
     if (studentData) {
       setUserName(studentData.name);
       setUserGrade(studentData.grade);
+      setUserAge(studentData.age || 13);
       setPoints(studentData.points);
       setStreak(studentData.streak);
       setUserInterests(studentData.interests);
     }
   }, [studentData]);
+
+  const saveProfileChanges = async () => {
+    if (studentId && editName.trim() && editGrade.trim() && editAge > 0) {
+      setUserName(editName);
+      setUserGrade(editGrade);
+      setUserAge(editAge);
+      
+      await updateStudent(studentId, { 
+        name: editName, 
+        grade: editGrade,
+        age: editAge 
+      });
+      
+      setIsEditingProfile(false);
+      toast({
+        title: 'Профиль обновлён! ✅',
+        description: 'Твои данные успешно сохранены',
+      });
+    }
+  };
+
+  const startEditingProfile = () => {
+    setEditName(userName);
+    setEditGrade(userGrade);
+    setEditAge(userAge);
+    setIsEditingProfile(true);
+  };
 
   const addInterest = async (interest: string) => {
     if (!userInterests.includes(interest) && userInterests.length < 6) {
@@ -212,6 +245,7 @@ const SchoolApp = () => {
             <SchoolDashboardTab
               userName={userName}
               userGrade={userGrade}
+              userAge={userAge}
               totalProgress={totalProgress}
               streak={streak}
               points={points}
@@ -231,6 +265,7 @@ const SchoolApp = () => {
             <ProfileTab
               userName={userName}
               userGrade={userGrade}
+              userAge={userAge}
               userInterests={userInterests}
               points={points}
               streak={streak}
@@ -238,6 +273,16 @@ const SchoolApp = () => {
               subjects={subjects}
               isEditingInterests={isEditingInterests}
               setIsEditingInterests={setIsEditingInterests}
+              isEditingProfile={isEditingProfile}
+              editName={editName}
+              editGrade={editGrade}
+              editAge={editAge}
+              setEditName={setEditName}
+              setEditGrade={setEditGrade}
+              setEditAge={setEditAge}
+              startEditingProfile={startEditingProfile}
+              saveProfileChanges={saveProfileChanges}
+              cancelEditingProfile={() => setIsEditingProfile(false)}
               newInterest={newInterest}
               setNewInterest={setNewInterest}
               addInterest={addInterest}

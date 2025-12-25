@@ -38,7 +38,7 @@ def handler(event, context):
                 }
             
             cursor.execute('''
-                SELECT id, name, grade, points, streak, created_at, updated_at
+                SELECT id, name, grade, age, points, streak, created_at, updated_at
                 FROM students WHERE id = %s
             ''', (student_id,))
             
@@ -56,10 +56,11 @@ def handler(event, context):
                 'id': student_row[0],
                 'name': student_row[1],
                 'grade': student_row[2],
-                'points': student_row[3],
-                'streak': student_row[4],
-                'created_at': student_row[5].isoformat() if student_row[5] else None,
-                'updated_at': student_row[6].isoformat() if student_row[6] else None
+                'age': student_row[3],
+                'points': student_row[4],
+                'streak': student_row[5],
+                'created_at': student_row[6].isoformat() if student_row[6] else None,
+                'updated_at': student_row[7].isoformat() if student_row[7] else None
             }
             
             cursor.execute('''
@@ -115,6 +116,7 @@ def handler(event, context):
             body = json.loads(event.get('body', '{}'))
             name = body.get('name')
             grade = body.get('grade')
+            age = body.get('age', 13)
             interests = body.get('interests', [])
             
             if not name or not grade:
@@ -126,10 +128,10 @@ def handler(event, context):
                 }
             
             cursor.execute('''
-                INSERT INTO students (name, grade, points, streak)
-                VALUES (%s, %s, 0, 0)
+                INSERT INTO students (name, grade, age, points, streak)
+                VALUES (%s, %s, %s, 0, 0)
                 RETURNING id
-            ''', (name, grade))
+            ''', (name, grade, age))
             
             student_id = cursor.fetchone()[0]
             
@@ -194,6 +196,10 @@ def handler(event, context):
             if 'grade' in body:
                 update_fields.append('grade = %s')
                 update_values.append(body['grade'])
+            
+            if 'age' in body:
+                update_fields.append('age = %s')
+                update_values.append(body['age'])
             
             if 'points' in body:
                 update_fields.append('points = %s')
