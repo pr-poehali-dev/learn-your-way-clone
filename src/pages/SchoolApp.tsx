@@ -7,6 +7,8 @@ import { Subject, Achievement } from '@/components/school/schoolTypes';
 import { SchoolDashboardTab } from '@/components/school/SchoolDashboardTab';
 import { SchoolSubjectsTab } from '@/components/school/SchoolSubjectsTab';
 import { AchievementsTab, ProfileTab } from '@/components/school/SchoolProfileTabs';
+import { CoursesListTab } from '@/components/school/CoursesListTab';
+import { CourseDetailTab } from '@/components/school/CourseDetailTab';
 import { useStudent } from '@/hooks/useStudent';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,6 +27,8 @@ const SchoolApp = () => {
   const [editName, setEditName] = useState('');
   const [editGrade, setEditGrade] = useState('');
   const [editAge, setEditAge] = useState(0);
+  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
+  const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
   
   const { studentData, loading, updateStudent } = useStudent(studentId);
   const { toast } = useToast();
@@ -210,7 +214,7 @@ const SchoolApp = () => {
 
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid h-auto p-2 bg-white border-2 border-orange-200">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid h-auto p-2 bg-white border-2 border-orange-200">
             <TabsTrigger
               value="dashboard"
               className="gap-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-xl"
@@ -219,10 +223,21 @@ const SchoolApp = () => {
               <span className="hidden sm:inline">Главная</span>
             </TabsTrigger>
             <TabsTrigger
-              value="subjects"
+              value="courses"
               className="gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-xl"
+              onClick={() => {
+                setSelectedCourseId(null);
+                setSelectedLessonId(null);
+              }}
             >
               <Icon name="BookOpen" size={18} />
+              <span className="hidden sm:inline">Курсы</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="subjects"
+              className="gap-2 data-[state=active]:bg-purple-500 data-[state=active]:text-white rounded-xl"
+            >
+              <Icon name="Library" size={18} />
               <span className="hidden sm:inline">Предметы</span>
             </TabsTrigger>
             <TabsTrigger
@@ -234,7 +249,7 @@ const SchoolApp = () => {
             </TabsTrigger>
             <TabsTrigger
               value="profile"
-              className="gap-2 data-[state=active]:bg-purple-500 data-[state=active]:text-white rounded-xl"
+              className="gap-2 data-[state=active]:bg-pink-500 data-[state=active]:text-white rounded-xl"
             >
               <Icon name="User" size={18} />
               <span className="hidden sm:inline">Профиль</span>
@@ -251,6 +266,22 @@ const SchoolApp = () => {
               points={points}
               subjects={subjects}
             />
+          </TabsContent>
+
+          <TabsContent value="courses">
+            {selectedCourseId ? (
+              <CourseDetailTab
+                courseId={selectedCourseId}
+                studentId={studentId}
+                onBack={() => setSelectedCourseId(null)}
+                onLessonSelect={(lessonId) => setSelectedLessonId(lessonId)}
+              />
+            ) : (
+              <CoursesListTab
+                studentId={studentId}
+                onCourseSelect={(courseId) => setSelectedCourseId(courseId)}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="subjects">
