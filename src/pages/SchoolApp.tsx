@@ -229,7 +229,7 @@ const SchoolApp = () => {
               className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white rounded-xl"
             >
               <Icon name="Sparkles" size={18} />
-              <span className="hidden sm:inline">AI-Репетитор</span>
+              <span className="hidden sm:inline">ИИшка</span>
             </TabsTrigger>
             <TabsTrigger
               value="courses"

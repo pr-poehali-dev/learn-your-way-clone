@@ -88,7 +88,7 @@ export const SchoolDashboardTab = ({
               </div>
               <div className="flex-1">
                 <h3 className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg mb-2">
-                  AI-Репетитор 🤖
+                  ИИшка 🤖
                 </h3>
                 <p className="text-base md:text-lg text-white/95 font-semibold">
                   Задай вопрос и получи объяснение через свои увлечения!

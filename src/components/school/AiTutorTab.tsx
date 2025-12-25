@@ -129,7 +129,7 @@ export const AiTutorTab = ({ userName, userAge, userInterests, studentId }: AiTu
             </div>
             <div>
               <h2 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">
-                AI-Репетитор 🤖
+                ИИшка 🤖
               </h2>
               <p className="text-xl md:text-2xl text-white/95 font-semibold mt-2">
                 Объясню любую тему через твои увлечения!
