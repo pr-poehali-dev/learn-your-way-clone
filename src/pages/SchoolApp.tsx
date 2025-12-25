@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Subject, Achievement } from '@/components/school/schoolTypes';
 import { SchoolDashboardTab } from '@/components/school/SchoolDashboardTab';
@@ -11,7 +12,9 @@ import { CoursesListTab } from '@/components/school/CoursesListTab';
 import { CourseDetailTab } from '@/components/school/CourseDetailTab';
 import { LessonViewTab } from '@/components/school/LessonViewTab';
 import { AiTutorTab } from '@/components/school/AiTutorTab';
+import { SubscriptionModal } from '@/components/school/SubscriptionModal';
 import { useStudent } from '@/hooks/useStudent';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useToast } from '@/hooks/use-toast';
 
 const SchoolApp = () => {
@@ -31,8 +34,11 @@ const SchoolApp = () => {
   const [editAge, setEditAge] = useState(0);
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
   const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [showAccessBlocker, setShowAccessBlocker] = useState(false);
   
   const { studentData, loading, updateStudent } = useStudent(studentId);
+  const { has_access, trial_days_left, subscription, refresh: refreshSubscription } = useSubscription(studentId);
   const { toast } = useToast();
 
   const [subjects] = useState<Subject[]>([
@@ -103,6 +109,12 @@ const SchoolApp = () => {
       setUserInterests(studentData.interests);
     }
   }, [studentData]);
+
+  useEffect(() => {
+    if (!has_access && trial_days_left === 0 && subscription) {
+      setShowAccessBlocker(true);
+    }
+  }, [has_access, trial_days_left, subscription]);
 
   const saveProfileChanges = async () => {
     if (studentId && editName.trim() && editGrade.trim() && editAge > 0) {
@@ -189,7 +201,7 @@ const SchoolApp = () => {
                 <Icon name="GraduationCap" size={28} className="text-white -rotate-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Обучайка-ка</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Обучай-ка</h1>
                 <p className="text-xs text-gray-600">Учись через увлечения</p>
               </div>
             </div>
@@ -215,6 +227,56 @@ const SchoolApp = () => {
       </nav>
 
       <div className="container mx-auto px-4 py-8">
+        {subscription && subscription.status === 'trial' && trial_days_left > 0 && (
+          <Card className="mb-6 border-4 border-blue-300 bg-gradient-to-r from-blue-50 to-cyan-50 shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-500 flex items-center justify-center">
+                    <Icon name="Clock" size={28} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-blue-900">
+                      У тебя {trial_days_left} {trial_days_left === 1 ? 'день' : 'дня'} бесплатного доступа! ⏳
+                    </h3>
+                    <p className="text-blue-700">Успей попробовать все возможности приложения</p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => setShowSubscriptionModal(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold"
+                  size="lg"
+                >
+                  <Icon name="Sparkles" size={20} className="mr-2" />
+                  Оформить подписку
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {showAccessBlocker && (
+          <Card className="mb-6 border-4 border-red-300 bg-gradient-to-r from-red-50 to-orange-50 shadow-2xl">
+            <CardContent className="p-8 text-center">
+              <Icon name="Lock" size={64} className="text-red-500 mx-auto mb-4" />
+              <h2 className="text-3xl font-bold text-red-900 mb-3">
+                Пробный период закончился 😔
+              </h2>
+              <p className="text-xl text-red-700 mb-6">
+                Оформи подписку, чтобы продолжить обучение!
+              </p>
+              <Button 
+                onClick={() => setShowSubscriptionModal(true)}
+                className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-bold text-lg py-6 px-8"
+                size="lg"
+              >
+                <Icon name="CreditCard" size={24} className="mr-2" />
+                Оформить подписку за 199 ₽
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 lg:w-auto lg:inline-grid h-auto p-2 bg-white border-2 border-orange-200 gap-1">
             <TabsTrigger
@@ -360,6 +422,16 @@ const SchoolApp = () => {
           <Icon name="Sparkles" size={28} />
         </Button>
       </div>
+
+      <SubscriptionModal
+        open={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+        studentId={studentId}
+        onSuccess={() => {
+          refreshSubscription();
+          setShowAccessBlocker(false);
+        }}
+      />
     </div>
   );
 };

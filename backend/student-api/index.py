@@ -1,10 +1,11 @@
 import json
 import os
 import psycopg2
-from datetime import datetime
+from datetime import datetime, timedelta
+from psycopg2.extras import RealDictCursor
 
 def handler(event, context):
-    '''API для работы с данными учеников: получение/обновление профиля, интересов и прогресса'''
+    '''API для работы с данными учеников: профиль, интересы, прогресс, подписки и промокоды'''
     
     method = event.get('httpMethod', 'GET')
     
@@ -24,7 +25,13 @@ def handler(event, context):
     try:
         dsn = os.environ.get('DATABASE_URL')
         conn = psycopg2.connect(dsn)
-        cursor = conn.cursor()
+        
+        path = event.get('path', '')
+        
+        if '/subscription/' in path:
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+        else:
+            cursor = conn.cursor()
         
         if method == 'GET':
             student_id = event.get('queryStringParameters', {}).get('student_id')
@@ -249,6 +256,231 @@ def handler(event, context):
                 'statusCode': 200,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
                 'body': json.dumps({'message': 'Student updated successfully'}),
+                'isBase64Encoded': False
+            }
+        
+        elif method == 'GET' and '/subscription/status' in path:
+            student_id = event.get('queryStringParameters', {}).get('student_id')
+            cursor.execute('''
+                SELECT s.*, 
+                       CASE 
+                           WHEN s.status = 'trial' AND s.trial_ends_at > NOW() THEN 
+                               EXTRACT(DAY FROM (s.trial_ends_at - NOW()))
+                           ELSE 0
+                       END as trial_days_left
+                FROM t_p93368307_learn_your_way_clone.subscriptions s
+                WHERE s.student_id = %s
+            ''', (student_id,))
+            
+            subscription = cursor.fetchone()
+            
+            if not subscription:
+                trial_ends = datetime.now() + timedelta(days=3)
+                cursor.execute('''
+                    INSERT INTO t_p93368307_learn_your_way_clone.subscriptions 
+                    (student_id, status, trial_ends_at)
+                    VALUES (%s, 'trial', %s)
+                    RETURNING *
+                ''', (student_id, trial_ends))
+                subscription = cursor.fetchone()
+                conn.commit()
+            
+            has_access = False
+            if subscription['status'] == 'trial' and subscription['trial_ends_at'] > datetime.now():
+                has_access = True
+            elif subscription['status'] == 'active' and subscription['subscription_ends_at'] and subscription['subscription_ends_at'] > datetime.now():
+                has_access = True
+            
+            cursor.close()
+            conn.close()
+            
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({
+                    'subscription': dict(subscription),
+                    'has_access': has_access,
+                    'trial_days_left': int(subscription['trial_days_left']) if subscription['trial_days_left'] else 0
+                }, default=str),
+                'isBase64Encoded': False
+            }
+        
+        elif method == 'POST' and '/subscription/validate-promocode' in path:
+            body = json.loads(event.get('body', '{}'))
+            code = body.get('code', '').strip().upper()
+            student_id = body.get('student_id')
+            
+            if not code or not student_id:
+                cursor.close()
+                conn.close()
+                return {
+                    'statusCode': 400,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Code and student_id required'}),
+                    'isBase64Encoded': False
+                }
+            cursor.execute('''
+                SELECT * FROM t_p93368307_learn_your_way_clone.promocodes
+                WHERE UPPER(code) = %s 
+                AND (valid_until IS NULL OR valid_until > NOW())
+                AND current_uses < max_uses
+            ''', (code,))
+            
+            promocode = cursor.fetchone()
+            
+            if not promocode:
+                cursor.close()
+                conn.close()
+                return {
+                    'statusCode': 404,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Промокод не найден или истёк'}),
+                    'isBase64Encoded': False
+                }
+            
+            cursor.execute('''
+                SELECT * FROM t_p93368307_learn_your_way_clone.promocode_usage
+                WHERE student_id = %s AND promocode_id = %s
+            ''', (student_id, promocode['id']))
+            
+            if cursor.fetchone():
+                cursor.close()
+                conn.close()
+                return {
+                    'statusCode': 400,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Ты уже использовал этот промокод'}),
+                    'isBase64Encoded': False
+                }
+            
+            cursor.close()
+            conn.close()
+            
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({
+                    'valid': True,
+                    'discount_percent': promocode['discount_percent'],
+                    'gives_full_access': promocode['gives_full_access'],
+                    'final_price': 199 * (100 - promocode['discount_percent']) // 100 if not promocode['gives_full_access'] else 0
+                }),
+                'isBase64Encoded': False
+            }
+        
+        elif method == 'POST' and '/subscription/apply-promocode' in path:
+            body = json.loads(event.get('body', '{}'))
+            code = body.get('code', '').strip().upper()
+            student_id = body.get('student_id')
+            
+            cursor.execute('''
+                SELECT * FROM t_p93368307_learn_your_way_clone.promocodes
+                WHERE UPPER(code) = %s
+            ''', (code,))
+            
+            promocode = cursor.fetchone()
+            
+            if promocode and promocode['gives_full_access']:
+                subscription_ends = datetime.now() + timedelta(days=365)
+                cursor.execute('''
+                    UPDATE t_p93368307_learn_your_way_clone.subscriptions
+                    SET status = 'active',
+                        subscription_ends_at = %s,
+                        promocode_used = %s,
+                        updated_at = NOW()
+                    WHERE student_id = %s
+                ''', (subscription_ends, code, student_id))
+                
+                cursor.execute('''
+                    INSERT INTO t_p93368307_learn_your_way_clone.promocode_usage
+                    (student_id, promocode_id)
+                    VALUES (%s, %s)
+                    ON CONFLICT DO NOTHING
+                ''', (student_id, promocode['id']))
+                
+                cursor.execute('''
+                    UPDATE t_p93368307_learn_your_way_clone.promocodes
+                    SET current_uses = current_uses + 1
+                    WHERE id = %s
+                ''', (promocode['id'],))
+                
+                conn.commit()
+                cursor.close()
+                conn.close()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'success': True, 'message': 'Промокод активирован! Полный доступ открыт на год!'}),
+                    'isBase64Encoded': False
+                }
+            
+            cursor.close()
+            conn.close()
+            return {
+                'statusCode': 400,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': 'Invalid promocode'}),
+                'isBase64Encoded': False
+            }
+        
+        elif method == 'POST' and '/subscription/create-payment' in path:
+            body = json.loads(event.get('body', '{}'))
+            student_id = body.get('student_id')
+            amount = body.get('amount', 199)
+            promocode = body.get('promocode', '')
+            
+            cursor.execute('''
+                INSERT INTO t_p93368307_learn_your_way_clone.payments
+                (student_id, amount, status, payment_system, promocode_used)
+                VALUES (%s, %s, 'pending', 'demo', %s)
+                RETURNING id
+            ''', (student_id, amount, promocode))
+            
+            payment_id = cursor.fetchone()[0]
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({
+                    'payment_id': payment_id,
+                    'amount': float(amount),
+                    'payment_url': f'https://demo-payment.poehali.dev/{payment_id}'
+                }),
+                'isBase64Encoded': False
+            }
+        
+        elif method == 'POST' and '/subscription/confirm-payment' in path:
+            body = json.loads(event.get('body', '{}'))
+            payment_id = body.get('payment_id')
+            student_id = body.get('student_id')
+            
+            cursor.execute('''
+                UPDATE t_p93368307_learn_your_way_clone.payments
+                SET status = 'paid', paid_at = NOW()
+                WHERE id = %s
+            ''', (payment_id,))
+            
+            subscription_ends = datetime.now() + timedelta(days=30)
+            cursor.execute('''
+                UPDATE t_p93368307_learn_your_way_clone.subscriptions
+                SET status = 'active',
+                    subscription_ends_at = %s,
+                    updated_at = NOW()
+                WHERE student_id = %s
+            ''', (subscription_ends, student_id))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'success': True, 'message': 'Подписка активирована на 30 дней!'}),
                 'isBase64Encoded': False
             }
         
