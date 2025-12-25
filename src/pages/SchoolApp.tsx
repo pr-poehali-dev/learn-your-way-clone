@@ -274,6 +274,7 @@ const SchoolApp = () => {
               streak={streak}
               points={points}
               subjects={subjects}
+              onAiTutorClick={() => setActiveTab('ai-tutor')}
             />
           </TabsContent>
 

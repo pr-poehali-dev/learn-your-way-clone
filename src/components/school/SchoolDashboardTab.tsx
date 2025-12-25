@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Subject } from './schoolTypes';
 
@@ -12,6 +13,7 @@ interface SchoolDashboardTabProps {
   streak: number;
   points: number;
   subjects: Subject[];
+  onAiTutorClick: () => void;
 }
 
 export const SchoolDashboardTab = ({
@@ -22,6 +24,7 @@ export const SchoolDashboardTab = ({
   streak,
   points,
   subjects,
+  onAiTutorClick,
 }: SchoolDashboardTabProps) => {
   const getGreetingsByAge = (age: number) => {
     if (age <= 9) {
@@ -72,6 +75,36 @@ export const SchoolDashboardTab = ({
           </div>
         </div>
       </div>
+
+      <Card 
+        className="border-4 border-purple-300 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 shadow-2xl cursor-pointer hover:shadow-3xl hover:scale-[1.02] transition-all"
+        onClick={onAiTutorClick}
+      >
+        <CardContent className="p-6 md:p-8">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 flex-1">
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+                <Icon name="Sparkles" size={40} className="text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg mb-2">
+                  AI-Репетитор 🤖
+                </h3>
+                <p className="text-base md:text-lg text-white/95 font-semibold">
+                  Задай вопрос и получи объяснение через свои увлечения!
+                </p>
+              </div>
+            </div>
+            <Button 
+              size="lg"
+              className="bg-white text-purple-600 hover:bg-white/90 font-bold text-lg px-6 py-6 rounded-2xl shadow-xl hidden sm:flex"
+            >
+              <Icon name="MessageCircle" size={24} className="mr-2" />
+              Спросить
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 md:grid-cols-3">
         <Card className="border-4 border-orange-200 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-orange-50 to-orange-100">
