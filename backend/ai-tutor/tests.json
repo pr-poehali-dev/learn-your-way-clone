@@ -1,0 +1,36 @@
+{
+  "tests": [
+    {
+      "name": "Test AI tutor with question about speed",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "question": "Что такое скорость?",
+        "interests": ["Футбол", "Видеоигры"],
+        "age": 13,
+        "name": "Миша"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "question": "string",
+        "answer": "string",
+        "interests_used": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test AI tutor without question",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "interests": ["Футбол"],
+        "age": 13
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

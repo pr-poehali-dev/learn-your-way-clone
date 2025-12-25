@@ -10,6 +10,7 @@ import { AchievementsTab, ProfileTab } from '@/components/school/SchoolProfileTa
 import { CoursesListTab } from '@/components/school/CoursesListTab';
 import { CourseDetailTab } from '@/components/school/CourseDetailTab';
 import { LessonViewTab } from '@/components/school/LessonViewTab';
+import { AiTutorTab } from '@/components/school/AiTutorTab';
 import { useStudent } from '@/hooks/useStudent';
 import { useToast } from '@/hooks/use-toast';
 
@@ -215,13 +216,20 @@ const SchoolApp = () => {
 
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid h-auto p-2 bg-white border-2 border-orange-200">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 lg:w-auto lg:inline-grid h-auto p-2 bg-white border-2 border-orange-200 gap-1">
             <TabsTrigger
               value="dashboard"
               className="gap-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-xl"
             >
               <Icon name="Home" size={18} />
               <span className="hidden sm:inline">Главная</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="ai-tutor"
+              className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white rounded-xl"
+            >
+              <Icon name="Sparkles" size={18} />
+              <span className="hidden sm:inline">AI-Репетитор</span>
             </TabsTrigger>
             <TabsTrigger
               value="courses"
@@ -266,6 +274,15 @@ const SchoolApp = () => {
               streak={streak}
               points={points}
               subjects={subjects}
+            />
+          </TabsContent>
+
+          <TabsContent value="ai-tutor">
+            <AiTutorTab
+              userName={userName}
+              userAge={userAge}
+              userInterests={userInterests}
+              studentId={studentId}
             />
           </TabsContent>
 
@@ -336,9 +353,10 @@ const SchoolApp = () => {
       <div className="fixed bottom-6 right-6 z-50">
         <Button
           size="lg"
+          onClick={() => setActiveTab('ai-tutor')}
           className="w-16 h-16 rounded-full shadow-2xl bg-gradient-to-br from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-4 border-white"
         >
-          <Icon name="MessageCircle" size={28} />
+          <Icon name="Sparkles" size={28} />
         </Button>
       </div>
     </div>
