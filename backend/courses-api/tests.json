@@ -1,0 +1,43 @@
+{
+  "tests": [
+    {
+      "name": "List all courses",
+      "method": "GET",
+      "path": "/?action=list_courses",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "courses": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get specific course with topics",
+      "method": "GET",
+      "path": "/?action=get_course&course_id=1",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "id": "number",
+        "name": "string",
+        "topics": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Update lesson progress",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "update_progress",
+        "student_id": 1,
+        "lesson_id": 1,
+        "status": "in_progress",
+        "progress_percent": 50
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "message": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
