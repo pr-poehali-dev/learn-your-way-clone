@@ -189,7 +189,7 @@ const SchoolApp = () => {
                 <Icon name="GraduationCap" size={28} className="text-white -rotate-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Учёба в кайф</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Обучайка-ка</h1>
                 <p className="text-xs text-gray-600">Учись через увлечения</p>
               </div>
             </div>
