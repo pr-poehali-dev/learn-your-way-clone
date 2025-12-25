@@ -21,14 +21,37 @@ export const SchoolDashboardTab = ({
   points,
   subjects,
 }: SchoolDashboardTabProps) => {
+  const greetings = [
+    { title: `Привет, ${userName}! 🚀`, subtitle: 'Готов к новым урокам по твоим любимым темам?' },
+    { title: `Добро пожаловать, ${userName}! 🌟`, subtitle: 'Сегодня узнаем что-то интересное по геометрии через футбол!' },
+    { title: `Привет, ${userName}! 🏀`, subtitle: 'Давай прокачаем твои знания вместе с любимыми увлечениями!' },
+    { title: `С возвращением, ${userName}! 🎮`, subtitle: 'Пора продолжить игру в обучение — следующий уровень ждёт тебя!' },
+    { title: `Йоу, ${userName}! ⚡`, subtitle: 'Готов стать супергероем знаний? Поехали покорять новые темы!' },
+    { title: `Эй, ${userName}! 🎯`, subtitle: 'Твоя суперсила — учиться через то, что ты любишь. Продолжай в том же духе!' },
+  ];
+
+  const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col gap-2">
-        <h2 className="text-4xl font-bold text-gray-900">Привет, {userName}! 👋</h2>
-        <p className="text-lg text-gray-600">
-          Ты учишься в <span className="font-bold text-orange-600">{userGrade}</span>. Продолжай в том
-          же духе!
-        </p>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-400 via-pink-400 to-purple-500 p-8 md:p-12 shadow-2xl">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full -mr-32 -mt-32"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-10 rounded-full -ml-24 -mb-24"></div>
+        
+        <div className="relative z-10 flex flex-col gap-4">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white drop-shadow-lg">
+            {randomGreeting.title}
+          </h2>
+          <p className="text-xl md:text-2xl text-white/95 font-semibold max-w-3xl">
+            {randomGreeting.subtitle}
+          </p>
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-white/90 text-lg font-medium">Ты учишься в</span>
+            <span className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white font-bold text-lg border-2 border-white/30">
+              {userGrade}
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
