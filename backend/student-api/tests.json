@@ -1,0 +1,47 @@
+{
+  "tests": [
+    {
+      "name": "Create new student",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "name": "Миша",
+        "grade": "7 класс",
+        "interests": ["Футбол", "Видеоигры", "Космос"]
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "student_id": "number",
+        "message": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get student by ID",
+      "method": "GET",
+      "path": "/?student_id=1",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "id": "number",
+        "name": "string",
+        "grade": "string",
+        "interests": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Update student interests",
+      "method": "PUT",
+      "path": "/",
+      "body": {
+        "student_id": 1,
+        "interests": ["Футбол", "Музыка", "Космос", "Программирование"]
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "message": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

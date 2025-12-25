@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,16 +7,22 @@ import { Subject, Achievement } from '@/components/school/schoolTypes';
 import { SchoolDashboardTab } from '@/components/school/SchoolDashboardTab';
 import { SchoolSubjectsTab } from '@/components/school/SchoolSubjectsTab';
 import { AchievementsTab, ProfileTab } from '@/components/school/SchoolProfileTabs';
+import { useStudent } from '@/hooks/useStudent';
+import { useToast } from '@/hooks/use-toast';
 
 const SchoolApp = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [userName] = useState('Миша');
-  const [userGrade] = useState('7 класс');
+  const [studentId, setStudentId] = useState<number | null>(1);
+  const [userName, setUserName] = useState('Миша');
+  const [userGrade, setUserGrade] = useState('7 класс');
   const [userInterests, setUserInterests] = useState(['Футбол', 'Видеоигры', 'Космос']);
-  const [points] = useState(1250);
-  const [streak] = useState(7);
+  const [points, setPoints] = useState(1250);
+  const [streak, setStreak] = useState(7);
   const [isEditingInterests, setIsEditingInterests] = useState(false);
   const [newInterest, setNewInterest] = useState('');
+  
+  const { studentData, loading, updateStudent } = useStudent(studentId);
+  const { toast } = useToast();
 
   const [subjects] = useState<Subject[]>([
     {
@@ -76,24 +82,61 @@ const SchoolApp = () => {
     subjects.reduce((acc, subject) => acc + subject.progress, 0) / subjects.length
   );
 
-  const addInterest = (interest: string) => {
+  useEffect(() => {
+    if (studentData) {
+      setUserName(studentData.name);
+      setUserGrade(studentData.grade);
+      setPoints(studentData.points);
+      setStreak(studentData.streak);
+      setUserInterests(studentData.interests);
+    }
+  }, [studentData]);
+
+  const addInterest = async (interest: string) => {
     if (!userInterests.includes(interest) && userInterests.length < 6) {
-      setUserInterests([...userInterests, interest]);
+      const newInterests = [...userInterests, interest];
+      setUserInterests(newInterests);
+      
+      if (studentId) {
+        await updateStudent(studentId, { interests: newInterests });
+        toast({
+          title: 'Интерес добавлен! 🎉',
+          description: `Теперь ты будешь учиться через ${interest}`,
+        });
+      }
     }
   };
 
-  const removeInterest = (interest: string) => {
-    setUserInterests(userInterests.filter(i => i !== interest));
+  const removeInterest = async (interest: string) => {
+    const newInterests = userInterests.filter(i => i !== interest);
+    setUserInterests(newInterests);
+    
+    if (studentId) {
+      await updateStudent(studentId, { interests: newInterests });
+      toast({
+        title: 'Интерес удалён',
+        description: `${interest} убран из твоих интересов`,
+      });
+    }
   };
 
-  const addCustomInterest = () => {
+  const addCustomInterest = async () => {
     if (
       newInterest.trim() &&
       !userInterests.includes(newInterest.trim()) &&
       userInterests.length < 6
     ) {
-      setUserInterests([...userInterests, newInterest.trim()]);
+      const newInterests = [...userInterests, newInterest.trim()];
+      setUserInterests(newInterests);
       setNewInterest('');
+      
+      if (studentId) {
+        await updateStudent(studentId, { interests: newInterests });
+        toast({
+          title: 'Интерес добавлен! 🎉',
+          description: `Теперь ты будешь учиться через ${newInterest.trim()}`,
+        });
+      }
     }
   };
 
