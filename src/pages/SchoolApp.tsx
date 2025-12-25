@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 
 interface Subject {
@@ -23,9 +24,11 @@ const SchoolApp = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [userName] = useState('Миша');
   const [userGrade] = useState('7 класс');
-  const [userInterests] = useState(['Футбол', 'Видеоигры', 'Космос']);
+  const [userInterests, setUserInterests] = useState(['Футбол', 'Видеоигры', 'Космос']);
   const [points] = useState(1250);
   const [streak] = useState(7);
+  const [isEditingInterests, setIsEditingInterests] = useState(false);
+  const [newInterest, setNewInterest] = useState('');
 
   const [subjects] = useState<Subject[]>([
     {
@@ -84,6 +87,38 @@ const SchoolApp = () => {
   const totalProgress = Math.round(
     subjects.reduce((acc, subject) => acc + subject.progress, 0) / subjects.length
   );
+
+  const availableInterests = [
+    'Футбол',
+    'Видеоигры',
+    'Космос',
+    'Музыка',
+    'Искусство',
+    'Спорт',
+    'Кино',
+    'Чтение',
+    'Танцы',
+    'Программирование',
+    'Наука',
+    'Путешествия',
+  ];
+
+  const addInterest = (interest: string) => {
+    if (!userInterests.includes(interest) && userInterests.length < 6) {
+      setUserInterests([...userInterests, interest]);
+    }
+  };
+
+  const removeInterest = (interest: string) => {
+    setUserInterests(userInterests.filter(i => i !== interest));
+  };
+
+  const addCustomInterest = () => {
+    if (newInterest.trim() && !userInterests.includes(newInterest.trim()) && userInterests.length < 6) {
+      setUserInterests([...userInterests, newInterest.trim()]);
+      setNewInterest('');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50">
@@ -426,17 +461,87 @@ const SchoolApp = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <h3 className="font-bold text-gray-900 mb-3 text-lg">Мои интересы</h3>
-                  <div className="flex gap-3 flex-wrap">
-                    {userInterests.map(interest => (
-                      <Badge
-                        key={interest}
-                        className="px-4 py-2 text-base bg-gradient-to-r from-purple-400 to-blue-400 text-white border-0"
-                      >
-                        {interest}
-                      </Badge>
-                    ))}
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold text-gray-900 text-lg">Мои интересы</h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditingInterests(!isEditingInterests)}
+                      className="gap-2 font-semibold"
+                    >
+                      <Icon name={isEditingInterests ? 'X' : 'Edit'} size={16} />
+                      {isEditingInterests ? 'Готово' : 'Редактировать'}
+                    </Button>
                   </div>
+
+                  {isEditingInterests ? (
+                    <div className="space-y-4">
+                      <div className="flex gap-2 flex-wrap">
+                        {userInterests.map(interest => (
+                          <Badge
+                            key={interest}
+                            className="px-4 py-2 text-base bg-gradient-to-r from-purple-400 to-blue-400 text-white border-0 cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => removeInterest(interest)}
+                          >
+                            {interest}
+                            <Icon name="X" size={14} className="ml-2" />
+                          </Badge>
+                        ))}
+                      </div>
+
+                      <div className="space-y-3">
+                        <p className="text-sm text-gray-600 font-semibold">
+                          Выбери интересы (максимум 6):
+                        </p>
+                        <div className="flex gap-2 flex-wrap">
+                          {availableInterests
+                            .filter(interest => !userInterests.includes(interest))
+                            .map(interest => (
+                              <Badge
+                                key={interest}
+                                variant="outline"
+                                className="px-4 py-2 text-base cursor-pointer hover:bg-purple-100 hover:border-purple-300 transition-colors"
+                                onClick={() => addInterest(interest)}
+                              >
+                                <Icon name="Plus" size={14} className="mr-1" />
+                                {interest}
+                              </Badge>
+                            ))}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Или добавь свой интерес..."
+                          value={newInterest}
+                          onChange={e => setNewInterest(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && addCustomInterest()}
+                          className="flex-1"
+                        />
+                        <Button onClick={addCustomInterest} className="gap-2">
+                          <Icon name="Plus" size={16} />
+                          Добавить
+                        </Button>
+                      </div>
+
+                      {userInterests.length >= 6 && (
+                        <p className="text-sm text-orange-600 font-semibold">
+                          Достигнут максимум интересов (6). Удали один, чтобы добавить новый.
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex gap-3 flex-wrap">
+                      {userInterests.map(interest => (
+                        <Badge
+                          key={interest}
+                          className="px-4 py-2 text-base bg-gradient-to-r from-purple-400 to-blue-400 text-white border-0"
+                        >
+                          {interest}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div>
