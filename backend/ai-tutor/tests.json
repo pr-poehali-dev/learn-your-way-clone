@@ -1,36 +1,85 @@
 {
   "tests": [
     {
-      "name": "Test AI tutor with question about speed",
+      "name": "Test chat action",
       "method": "POST",
       "path": "/",
       "body": {
-        "question": "Что такое скорость?",
-        "interests": ["Футбол", "Видеоигры"],
-        "age": 13,
-        "name": "Миша"
+        "action": "chat",
+        "message": "Объясни, что такое скорость",
+        "history": [],
+        "student_info": {
+          "name": "Тест",
+          "age": 12,
+          "grade": "6",
+          "interests": ["футбол", "видеоигры"]
+        }
       },
       "expectedStatus": 200,
       "expectedBody": {
-        "question": "string",
-        "answer": "string",
-        "interests_used": "array"
+        "reply": "string"
       },
       "bodyMatcher": "partial"
     },
     {
-      "name": "Test AI tutor without question",
+      "name": "Test explain action",
       "method": "POST",
       "path": "/",
       "body": {
-        "interests": ["Футбол"],
-        "age": 13
+        "action": "explain",
+        "subject": "Математика",
+        "topic": "Дроби",
+        "student_info": {
+          "name": "Тест",
+          "age": 11,
+          "grade": "5",
+          "interests": ["minecraft", "лего"]
+        }
       },
-      "expectedStatus": 400,
+      "expectedStatus": 200,
       "expectedBody": {
-        "error": "string"
+        "explanation": "string"
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test generate task action",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "generate_task",
+        "subject": "Физика",
+        "topic": "Скорость",
+        "difficulty": "easy",
+        "student_info": {
+          "name": "Тест",
+          "age": 13,
+          "grade": "7",
+          "interests": ["машины", "спорт"]
+        }
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "task": "object"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test missing action parameter",
+      "method": "POST",
+      "path": "/",
+      "body": {},
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "Action is required"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test OPTIONS method for CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
     }
   ]
 }
