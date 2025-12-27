@@ -211,33 +211,6 @@ const SchoolApp = () => {
       </nav>
 
       <div className="container mx-auto px-4 py-8">
-        {subscription && subscription.status === 'trial' && trial_days_left > 0 && (
-          <Card className="mb-6 border-4 border-blue-300 bg-gradient-to-r from-blue-50 to-cyan-50 shadow-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-blue-500 flex items-center justify-center">
-                    <Icon name="Clock" size={28} className="text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-blue-900">
-                      У тебя {trial_days_left} {trial_days_left === 1 ? 'день' : 'дня'} бесплатного доступа! ⏳
-                    </h3>
-                    <p className="text-blue-700">Успей попробовать все возможности приложения</p>
-                  </div>
-                </div>
-                <Button 
-                  onClick={() => setShowSubscriptionModal(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold"
-                  size="lg"
-                >
-                  <Icon name="Sparkles" size={20} className="mr-2" />
-                  Оформить подписку
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
 
 
