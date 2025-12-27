@@ -51,6 +51,8 @@ def handler(event: dict, context) -> dict:
         proxy_url = os.environ.get('PROXY_URL')
         proxy_user = os.environ.get('PROXY_USER')
         
+        print(f'DEBUG: PROXY_URL={proxy_url}, PROXY_USER={bool(proxy_user)}')
+        
         if proxy_url and proxy_user:
             proxy_full = f'http://{proxy_user}@{proxy_url}'
             print(f'Using proxy: {proxy_url} (user configured)')
