@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import * as React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -33,6 +34,10 @@ export const ChatMode = ({
 }: ChatModeProps) => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [currentMessage, setCurrentMessage] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [recognition, setRecognition] = useState<any>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speakingMessageId, setSpeakingMessageId] = useState<number | null>(null);
 
   const exampleQuestions = [
     'Объясни, что такое скорость',
@@ -41,6 +46,97 @@ export const ChatMode = ({
     'Объясни дроби простыми словами',
     'Как устроен двигатель?'
   ];
+
+  // Initialize speech recognition
+  React.useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.lang = 'ru-RU';
+
+      recognitionInstance.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setCurrentMessage(transcript);
+        setIsRecording(false);
+      };
+
+      recognitionInstance.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsRecording(false);
+        toast({
+          title: 'Ошибка распознавания',
+          description: 'Не удалось распознать речь. Проверь микрофон.',
+          variant: 'destructive'
+        });
+      };
+
+      recognitionInstance.onend = () => {
+        setIsRecording(false);
+      };
+
+      setRecognition(recognitionInstance);
+    }
+  }, []);
+
+  const startRecording = () => {
+    if (!recognition) {
+      toast({
+        title: 'Не поддерживается',
+        description: 'Голосовой ввод не поддерживается в твоём браузере',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsRecording(true);
+    recognition.start();
+  };
+
+  const stopRecording = () => {
+    if (recognition && isRecording) {
+      recognition.stop();
+    }
+  };
+
+  const speakText = (text: string) => {
+    if (!('speechSynthesis' in window)) {
+      console.warn('Speech synthesis not supported');
+      return;
+    }
+
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ru-RU';
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setSpeakingMessageId(null);
+    };
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setSpeakingMessageId(null);
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const toggleSpeech = (messageIndex: number, text: string) => {
+    if (isSpeaking && speakingMessageId === messageIndex) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      setSpeakingMessageId(null);
+    } else {
+      setSpeakingMessageId(messageIndex);
+      speakText(text);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!currentMessage.trim()) {
@@ -102,6 +198,9 @@ export const ChatMode = ({
           timestamp: new Date()
         };
         setChatMessages(prev => [...prev, assistantMessage]);
+        
+        // Auto-speak assistant response
+        speakText(data.reply);
       } else {
         console.error('Backend error:', data);
         const errorMsg = data.error || 'Не удалось получить ответ от ИИ';
@@ -162,7 +261,23 @@ export const ChatMode = ({
                       : 'bg-white border-2 border-purple-200'
                   }`}
                 >
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="whitespace-pre-wrap flex-1">{msg.content}</p>
+                    {msg.role === 'assistant' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleSpeech(idx, msg.content)}
+                        className="flex-shrink-0 h-8 w-8 p-0"
+                      >
+                        <Icon 
+                          name={isSpeaking && speakingMessageId === idx ? 'VolumeX' : 'Volume2'} 
+                          size={16} 
+                          className={isSpeaking && speakingMessageId === idx ? 'text-purple-600 animate-pulse' : 'text-gray-400'}
+                        />
+                      </Button>
+                    )}
+                  </div>
                   <p className="text-xs mt-2 opacity-70">
                     {msg.timestamp.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
                   </p>
@@ -192,19 +307,29 @@ export const ChatMode = ({
                 handleSendMessage();
               }
             }}
-            placeholder="Напиши свой вопрос..."
+            placeholder="Напиши свой вопрос или нажми 🎤"
             className="resize-none"
             rows={2}
-            disabled={loading}
+            disabled={loading || isRecording}
           />
-          <Button
-            onClick={handleSendMessage}
-            disabled={loading || !currentMessage.trim()}
-            size="lg"
-            className="self-end"
-          >
-            <Icon name="Send" size={20} />
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button
+              onClick={isRecording ? stopRecording : startRecording}
+              disabled={loading}
+              size="lg"
+              variant={isRecording ? 'destructive' : 'outline'}
+              className={isRecording ? 'animate-pulse' : ''}
+            >
+              <Icon name={isRecording ? 'MicOff' : 'Mic'} size={20} />
+            </Button>
+            <Button
+              onClick={handleSendMessage}
+              disabled={loading || !currentMessage.trim() || isRecording}
+              size="lg"
+            >
+              <Icon name="Send" size={20} />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

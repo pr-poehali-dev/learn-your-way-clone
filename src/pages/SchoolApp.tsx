@@ -8,6 +8,7 @@ import { Subject, Achievement } from '@/components/school/schoolTypes';
 import { SchoolDashboardTab } from '@/components/school/SchoolDashboardTab';
 import { AchievementsTab, ProfileTab } from '@/components/school/SchoolProfileTabs';
 import { AiTutorTab } from '@/components/school/AiTutorTab';
+import { NotesTab } from '@/components/school/NotesTab';
 import { useStudent } from '@/hooks/useStudent';
 import { useToast } from '@/hooks/use-toast';
 
@@ -215,7 +216,7 @@ const SchoolApp = () => {
 
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid h-auto p-2 bg-white border-2 border-orange-200 gap-1">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid h-auto p-2 bg-white border-2 border-orange-200 gap-1">
             <TabsTrigger
               value="dashboard"
               className="gap-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-xl"
@@ -229,6 +230,13 @@ const SchoolApp = () => {
             >
               <Icon name="Sparkles" size={18} />
               <span className="hidden sm:inline">ИИшка</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="notes"
+              className="gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-xl"
+            >
+              <Icon name="BookMarked" size={18} />
+              <span className="hidden sm:inline">Конспекты</span>
             </TabsTrigger>
             <TabsTrigger
               value="achievements"
@@ -268,7 +276,9 @@ const SchoolApp = () => {
             />
           </TabsContent>
 
-
+          <TabsContent value="notes">
+            <NotesTab studentId={studentId} />
+          </TabsContent>
 
           <TabsContent value="achievements">
             <AchievementsTab achievements={achievements} />

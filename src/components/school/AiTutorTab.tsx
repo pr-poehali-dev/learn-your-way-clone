@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ChatMode } from './ai-tutor/ChatMode';
 import { ExplainMode } from './ai-tutor/ExplainMode';
 import { TaskMode } from './ai-tutor/TaskMode';
+import { HomeworkCheckMode } from './ai-tutor/HomeworkCheckMode';
 
 interface AiTutorTabProps {
   userName: string;
@@ -99,8 +100,8 @@ export const AiTutorTab = ({ userName, userAge, userInterests, studentId }: AiTu
             <Icon name="FileText" size={18} />
             Создать задание
           </TabsTrigger>
-          <TabsTrigger value="check" className="gap-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white" disabled>
-            <Icon name="CheckCircle" size={18} />
+          <TabsTrigger value="check" className="gap-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white">
+            <Icon name="Camera" size={18} />
             Проверить работу
           </TabsTrigger>
         </TabsList>
@@ -128,6 +129,7 @@ export const AiTutorTab = ({ userName, userAge, userInterests, studentId }: AiTu
             loading={loading}
             setLoading={setLoading}
             toast={toast}
+            studentId={studentId}
           />
         </TabsContent>
 
@@ -144,7 +146,20 @@ export const AiTutorTab = ({ userName, userAge, userInterests, studentId }: AiTu
           />
         </TabsContent>
 
-        <TabsContent value="check">
+        <TabsContent value="check" className="space-y-4">
+          <HomeworkCheckMode
+            userName={userName}
+            userAge={userAge}
+            userInterests={userInterests}
+            apiUrl={API_URL}
+            calculateGrade={calculateGrade}
+            loading={loading}
+            setLoading={setLoading}
+            toast={toast}
+          />
+        </TabsContent>
+        
+        <TabsContent value="old-check">
           <Card>
             <CardContent className="pt-6 text-center py-12">
               <Icon name="Construction" size={64} className="mx-auto mb-4 text-gray-400" />

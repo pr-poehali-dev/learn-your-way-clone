@@ -13,6 +13,7 @@ interface ExplainModeProps {
   loading: boolean;
   setLoading: (loading: boolean) => void;
   toast: any;
+  studentId: number | null;
 }
 
 export const ExplainMode = ({
@@ -23,12 +24,14 @@ export const ExplainMode = ({
   calculateGrade,
   loading,
   setLoading,
-  toast
+  toast,
+  studentId
 }: ExplainModeProps) => {
   const [explainSubject, setExplainSubject] = useState('');
   const [explainTopic, setExplainTopic] = useState('');
   const [explanation, setExplanation] = useState('');
   const [recommendedTopics, setRecommendedTopics] = useState<any[]>([]);
+  const [saving, setSaving] = useState(false);
 
   const handleExplainTopic = async () => {
     if (!explainSubject || !explainTopic) {
@@ -67,6 +70,8 @@ export const ExplainMode = ({
           title: 'Готово! 📚', 
           description: topicsCount > 0 ? `Читай объяснение и ${topicsCount} рекомендаций ниже` : 'Читай объяснение ниже'
         });
+        
+        await saveNote(explainSubject, explainTopic, data.explanation);
       } else {
         toast({ title: 'Ошибка', description: data.error, variant: 'destructive' });
       }
@@ -74,6 +79,30 @@ export const ExplainMode = ({
       toast({ title: 'Ошибка сети', variant: 'destructive' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const saveNote = async (subject: string, topic: string, content: string) => {
+    if (!studentId) return;
+    
+    try {
+      const existingNotes = JSON.parse(localStorage.getItem('student_notes') || '[]');
+      
+      const newNote = {
+        id: Date.now(),
+        student_id: studentId,
+        title: `${subject}: ${topic}`,
+        subject,
+        topic,
+        content,
+        note_type: 'explanation',
+        created_at: new Date().toISOString()
+      };
+      
+      existingNotes.unshift(newNote);
+      localStorage.setItem('student_notes', JSON.stringify(existingNotes));
+    } catch (err) {
+      console.error('Failed to save note:', err);
     }
   };
 
@@ -113,10 +142,16 @@ export const ExplainMode = ({
         {explanation && (
           <div className="space-y-4">
             <div className="mt-6 p-6 bg-blue-50 border-2 border-blue-200 rounded-lg">
-              <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <Icon name="BookOpen" size={24} className="text-blue-600" />
-                Объяснение
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold flex items-center gap-2">
+                  <Icon name="BookOpen" size={24} className="text-blue-600" />
+                  Объяснение
+                </h3>
+                <Badge className="bg-green-100 text-green-700 border-green-300">
+                  <Icon name="Check" size={14} className="mr-1" />
+                  Сохранено
+                </Badge>
+              </div>
               <div className="prose max-w-none whitespace-pre-wrap">{explanation}</div>
             </div>
             
