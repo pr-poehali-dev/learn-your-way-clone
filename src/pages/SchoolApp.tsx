@@ -6,15 +6,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Subject, Achievement } from '@/components/school/schoolTypes';
 import { SchoolDashboardTab } from '@/components/school/SchoolDashboardTab';
-import { SchoolSubjectsTab } from '@/components/school/SchoolSubjectsTab';
 import { AchievementsTab, ProfileTab } from '@/components/school/SchoolProfileTabs';
-import { CoursesListTab } from '@/components/school/CoursesListTab';
-import { CourseDetailTab } from '@/components/school/CourseDetailTab';
-import { LessonViewTab } from '@/components/school/LessonViewTab';
 import { AiTutorTab } from '@/components/school/AiTutorTab';
-import { SubscriptionModal } from '@/components/school/SubscriptionModal';
 import { useStudent } from '@/hooks/useStudent';
-import { useSubscription } from '@/hooks/useSubscription';
 import { useToast } from '@/hooks/use-toast';
 
 const SchoolApp = () => {
@@ -32,13 +26,7 @@ const SchoolApp = () => {
   const [editName, setEditName] = useState('');
   const [editGrade, setEditGrade] = useState('');
   const [editAge, setEditAge] = useState(0);
-  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
-  const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
-  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-  const [showAccessBlocker, setShowAccessBlocker] = useState(false);
-  
   const { studentData, loading, updateStudent } = useStudent(studentId);
-  const { has_access, trial_days_left, subscription, refresh: refreshSubscription } = useSubscription(studentId);
   const { toast } = useToast();
 
   const [subjects] = useState<Subject[]>([
@@ -110,11 +98,7 @@ const SchoolApp = () => {
     }
   }, [studentData]);
 
-  useEffect(() => {
-    if (!has_access && trial_days_left === 0 && subscription) {
-      setShowAccessBlocker(true);
-    }
-  }, [has_access, trial_days_left, subscription]);
+
 
   const saveProfileChanges = async () => {
     if (studentId && editName.trim() && editGrade.trim() && editAge > 0) {
@@ -255,30 +239,10 @@ const SchoolApp = () => {
           </Card>
         )}
 
-        {showAccessBlocker && (
-          <Card className="mb-6 border-4 border-red-300 bg-gradient-to-r from-red-50 to-orange-50 shadow-2xl">
-            <CardContent className="p-8 text-center">
-              <Icon name="Lock" size={64} className="text-red-500 mx-auto mb-4" />
-              <h2 className="text-3xl font-bold text-red-900 mb-3">
-                Пробный период закончился 😔
-              </h2>
-              <p className="text-xl text-red-700 mb-6">
-                Оформи подписку, чтобы продолжить обучение!
-              </p>
-              <Button 
-                onClick={() => setShowSubscriptionModal(true)}
-                className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-bold text-lg py-6 px-8"
-                size="lg"
-              >
-                <Icon name="CreditCard" size={24} className="mr-2" />
-                Оформить подписку за 199 ₽
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 lg:w-auto lg:inline-grid h-auto p-2 bg-white border-2 border-orange-200 gap-1">
+          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid h-auto p-2 bg-white border-2 border-orange-200 gap-1">
             <TabsTrigger
               value="dashboard"
               className="gap-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-xl"
@@ -292,24 +256,6 @@ const SchoolApp = () => {
             >
               <Icon name="Sparkles" size={18} />
               <span className="hidden sm:inline">ИИшка</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="courses"
-              className="gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-xl"
-              onClick={() => {
-                setSelectedCourseId(null);
-                setSelectedLessonId(null);
-              }}
-            >
-              <Icon name="BookOpen" size={18} />
-              <span className="hidden sm:inline">Курсы</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="subjects"
-              className="gap-2 data-[state=active]:bg-purple-500 data-[state=active]:text-white rounded-xl"
-            >
-              <Icon name="Library" size={18} />
-              <span className="hidden sm:inline">Предметы</span>
             </TabsTrigger>
             <TabsTrigger
               value="achievements"
@@ -349,33 +295,7 @@ const SchoolApp = () => {
             />
           </TabsContent>
 
-          <TabsContent value="courses">
-            {selectedLessonId ? (
-              <LessonViewTab
-                lessonId={selectedLessonId}
-                studentId={studentId}
-                onBack={() => {
-                  setSelectedLessonId(null);
-                }}
-              />
-            ) : selectedCourseId ? (
-              <CourseDetailTab
-                courseId={selectedCourseId}
-                studentId={studentId}
-                onBack={() => setSelectedCourseId(null)}
-                onLessonSelect={(lessonId) => setSelectedLessonId(lessonId)}
-              />
-            ) : (
-              <CoursesListTab
-                studentId={studentId}
-                onCourseSelect={(courseId) => setSelectedCourseId(courseId)}
-              />
-            )}
-          </TabsContent>
 
-          <TabsContent value="subjects">
-            <SchoolSubjectsTab subjects={subjects} userInterests={userInterests} />
-          </TabsContent>
 
           <TabsContent value="achievements">
             <AchievementsTab achievements={achievements} />
@@ -423,15 +343,7 @@ const SchoolApp = () => {
         </Button>
       </div>
 
-      <SubscriptionModal
-        open={showSubscriptionModal}
-        onClose={() => setShowSubscriptionModal(false)}
-        studentId={studentId}
-        onSuccess={() => {
-          refreshSubscription();
-          setShowAccessBlocker(false);
-        }}
-      />
+
     </div>
   );
 };
