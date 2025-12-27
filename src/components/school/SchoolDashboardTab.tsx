@@ -106,22 +106,7 @@ export const SchoolDashboardTab = ({
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card className="border-4 border-orange-200 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-orange-50 to-orange-100">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-bold text-orange-700">Твой прогресс</CardTitle>
-              <div className="w-12 h-12 rounded-full bg-orange-500 flex items-center justify-center">
-                <Icon name="TrendingUp" size={24} className="text-white" />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-5xl font-bold text-orange-600 mb-3">{totalProgress}%</div>
-            <Progress value={totalProgress} className="h-4 bg-orange-200" />
-          </CardContent>
-        </Card>
-
+      <div className="grid gap-6 md:grid-cols-2">
         <Card className="border-4 border-blue-200 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-blue-50 to-blue-100">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -151,52 +136,6 @@ export const SchoolDashboardTab = ({
             <p className="text-sm text-green-600 font-semibold">Собери 2000! ⭐</p>
           </CardContent>
         </Card>
-      </div>
-
-      <div>
-        <h3 className="text-2xl font-bold text-gray-900 mb-4">Продолжай учиться 📚</h3>
-        <div className="grid gap-4 md:grid-cols-2">
-          {subjects.slice(0, 2).map(subject => (
-            <Card
-              key={subject.id}
-              className="border-4 border-gray-200 hover:border-orange-300 transition-all cursor-pointer hover:shadow-xl transform hover:-translate-y-1"
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div
-                        className={`w-14 h-14 rounded-2xl ${subject.color} flex items-center justify-center shadow-lg`}
-                      >
-                        <Icon name={subject.icon as any} size={28} className="text-white" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-xl">{subject.name}</CardTitle>
-                        <Badge className="mt-1 bg-purple-100 text-purple-700 border-purple-200">
-                          {subject.interest}
-                        </Badge>
-                      </div>
-                    </div>
-                    <CardDescription className="text-base mt-2">
-                      {subject.description}
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm font-semibold">
-                    <span className="text-gray-600">
-                      {subject.completedLessons} из {subject.lessons} уроков
-                    </span>
-                    <span className="text-orange-600 text-lg">{subject.progress}%</span>
-                  </div>
-                  <Progress value={subject.progress} className="h-3" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
       </div>
 
       <Card className="border-4 border-yellow-200 bg-gradient-to-r from-yellow-50 via-orange-50 to-pink-50 shadow-xl">
