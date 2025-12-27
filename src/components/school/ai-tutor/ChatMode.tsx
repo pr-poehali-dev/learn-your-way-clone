@@ -103,9 +103,11 @@ export const ChatMode = ({
         };
         setChatMessages(prev => [...prev, assistantMessage]);
       } else {
+        console.error('Backend error:', data);
+        const errorMsg = data.error || 'Не удалось получить ответ от ИИ';
         toast({
-          title: 'Ошибка',
-          description: data.error || 'Не удалось получить ответ',
+          title: `Ошибка ${response.status}`,
+          description: errorMsg.includes('API key') ? 'Не настроен OPENAI_API_KEY' : errorMsg,
           variant: 'destructive'
         });
       }

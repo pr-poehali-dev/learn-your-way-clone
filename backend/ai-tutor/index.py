@@ -46,7 +46,19 @@ def handler(event: dict, context) -> dict:
             }
         
         base_url = os.environ.get('OPENAI_BASE_URL', 'https://api.openai.com/v1')
-        client = OpenAI(api_key=api_key, base_url=base_url)
+        
+        import httpx
+        proxy_url = os.environ.get('PROXY_URL')
+        proxy_user = os.environ.get('PROXY_USER')
+        
+        if proxy_url and proxy_user:
+            http_client = httpx.Client(
+                proxy=f'http://{proxy_user}@{proxy_url}',
+                timeout=60.0
+            )
+            client = OpenAI(api_key=api_key, base_url=base_url, http_client=http_client)
+        else:
+            client = OpenAI(api_key=api_key, base_url=base_url)
         
         if action == 'chat':
             return handle_chat(client, body)
@@ -64,10 +76,17 @@ def handler(event: dict, context) -> dict:
             }
     
     except Exception as e:
+        import traceback
+        error_details = {
+            'error': str(e),
+            'type': type(e).__name__,
+            'traceback': traceback.format_exc()
+        }
+        print(f'ERROR: {error_details}')
         return {
             'statusCode': 500,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': str(e)})
+            'body': json.dumps({'error': str(e), 'details': error_details})
         }
 
 
