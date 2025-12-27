@@ -52,12 +52,15 @@ def handler(event: dict, context) -> dict:
         proxy_user = os.environ.get('PROXY_USER')
         
         if proxy_url and proxy_user:
+            proxy_full = f'http://{proxy_user}@{proxy_url}'
+            print(f'Using proxy: {proxy_url} (user configured)')
             http_client = httpx.Client(
-                proxy=f'http://{proxy_user}@{proxy_url}',
+                proxy=proxy_full,
                 timeout=60.0
             )
             client = OpenAI(api_key=api_key, base_url=base_url, http_client=http_client)
         else:
+            print('No proxy configured, using direct connection')
             client = OpenAI(api_key=api_key, base_url=base_url)
         
         if action == 'chat':
