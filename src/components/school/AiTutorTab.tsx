@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
-import funcUrl from '../../func2url.json';
 
 interface AiTutorTabProps {
   userName: string;
@@ -21,7 +20,7 @@ interface ChatMessage {
   timestamp: Date;
 }
 
-const API_URL = funcUrl['ai-tutor'] || '';
+const API_URL = 'https://functions.poehali.dev/2b82fc79-a1ff-459a-ad43-1b196dbe4c25';
 
 export const AiTutorTab = ({ userName, userAge, userInterests, studentId }: AiTutorTabProps) => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
