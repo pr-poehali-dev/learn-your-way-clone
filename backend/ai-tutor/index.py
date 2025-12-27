@@ -1,6 +1,8 @@
 import json
 import os
 from openai import OpenAI
+import psycopg2
+import psycopg2.extras
 
 def handler(event: dict, context) -> dict:
     '''ИИ-репетитор: объясняет темы, генерирует задания, проверяет работы через увлечения ученика (v2)'''
@@ -162,10 +164,15 @@ def handle_explain(client: OpenAI, body: dict) -> dict:
     
     explanation = response.choices[0].message.content
     
+    recommended_topics = find_related_topics(subject, topic, student_info.get('grade', '5-7'))
+    
     return {
         'statusCode': 200,
         'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-        'body': json.dumps({'explanation': explanation})
+        'body': json.dumps({
+            'explanation': explanation,
+            'recommended_topics': recommended_topics
+        }, ensure_ascii=False)
     }
 
 
@@ -255,6 +262,78 @@ def handle_check_homework(client: OpenAI, body: dict) -> dict:
         'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
         'body': json.dumps({'result': check_result})
     }
+
+
+def find_related_topics(subject: str, topic: str, grade: str) -> list:
+    '''Поиск релевантных тем в базе курсов'''
+    try:
+        dsn = os.environ.get('DATABASE_URL')
+        if not dsn:
+            print('WARNING: DATABASE_URL not configured')
+            return []
+        
+        conn = psycopg2.connect(dsn)
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        
+        grade_num = grade.split('-')[0] if '-' in grade else grade
+        
+        subject_keywords = {
+            'математика': ['Математика', 'Алгебра', 'Геометрия'],
+            'физика': ['Физика'],
+            'химия': ['Химия'],
+            'биология': ['Биология'],
+            'русский': ['Русский язык'],
+            'литература': ['Литература'],
+            'история': ['История'],
+            'география': ['География'],
+            'английский': ['Английский язык'],
+            'информатика': ['Информатика']
+        }
+        
+        subject_lower = subject.lower()
+        search_keywords = []
+        for key, values in subject_keywords.items():
+            if key in subject_lower:
+                search_keywords.extend(values)
+                break
+        
+        if not search_keywords:
+            search_keywords = [subject]
+        
+        subject_conditions = ' OR '.join([f"c.name ILIKE '%{kw}%'" for kw in search_keywords])
+        
+        query = f'''
+            SELECT 
+                ct.id,
+                ct.name as topic_name,
+                ct.description,
+                c.id as course_id,
+                c.name as course_name
+            FROM t_p93368307_learn_your_way_clone.course_topics ct
+            JOIN t_p93368307_learn_your_way_clone.courses c ON ct.course_id = c.id
+            WHERE c.name ~ '^{grade_num} класс'
+                AND ({subject_conditions})
+                AND (
+                    ct.name ILIKE '%{topic}%'
+                    OR ct.description ILIKE '%{topic}%'
+                )
+            ORDER BY ct.order_index
+            LIMIT 5
+        '''
+        
+        cur.execute(query)
+        results = cur.fetchall()
+        
+        cur.close()
+        conn.close()
+        
+        return [dict(row) for row in results]
+    
+    except Exception as e:
+        print(f'ERROR finding related topics: {e}')
+        import traceback
+        print(traceback.format_exc())
+        return []
 
 
 def build_system_prompt(student_info: dict) -> str:
